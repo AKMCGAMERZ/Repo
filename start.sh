@@ -26,4 +26,4 @@ echo "✅ Token saved in .env"
 echo "🚀 Starting Power ⚡ Host ☁️ Bot..."
 
 # Run the bot
-python3 bot-1-fixed.py
+python3 bot.py
