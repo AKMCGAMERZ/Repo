@@ -45,12 +45,17 @@ logger = logging.getLogger('PowerHostBot')
 # Load environment variables
 load_dotenv()
 
+# Start keep_alive webserver (keeps bot 'alive' for uptime pingers)
+from server import keep_alive
+keep_alive()
+
+
 # Bot configuration
 TOKEN = os.getenv('DISCORD_TOKEN')
 ADMIN_IDS = {int(id_) for id_ in os.getenv('ADMIN_IDS', '1210291131301101618').split(',') if id_.strip()}
 ADMIN_ROLE_ID = int(os.getenv('ADMIN_ROLE_ID', '1376177459870961694'))
-WATERMARK = "Power ⚡ Host ☁️ VPS Service"
-WELCOME_MESSAGE = "Welcome To Power ⚡ Host ☁️! Get Started With Us - Managed by InsaanXD"
+WATERMARK = "Power âš¡ Host â˜ï¸ VPS Service"
+WELCOME_MESSAGE = "Welcome To Power âš¡ Host â˜ï¸! Get Started With Us - Managed by InsaanXD"
 MAX_VPS_PER_USER = int(os.getenv('MAX_VPS_PER_USER', '3'))
 DEFAULT_OS_IMAGE = os.getenv('DEFAULT_OS_IMAGE', 'ubuntu:22.04')
 DOCKER_NETWORK = os.getenv('DOCKER_NETWORK', 'bridge')
@@ -96,7 +101,7 @@ RUN mkdir /var/run/sshd && \\
 RUN systemctl enable ssh && \\
     systemctl enable docker
 
-# Power ⚡ Host ☁️ customization
+# Power âš¡ Host â˜ï¸ customization
 RUN echo '{welcome_message}' > /etc/motd && \\
     echo 'echo "{welcome_message}"' >> /home/{username}/.bashrc && \\
     echo '{watermark}' > /etc/machine-info && \\
@@ -444,7 +449,7 @@ class PowerHostBot(commands.Bot):
                                 # Notify owner
                                 try:
                                     owner = await self.fetch_user(int(vps['created_by']))
-                                    await owner.send(f"⚠️ Your VPS {vps['vps_id']} has been suspended due to detected mining activity. Contact admin to unsuspend.")
+                                    await owner.send(f"âš ï¸ Your VPS {vps['vps_id']} has been suspended due to detected mining activity. Contact admin to unsuspend.")
                                 except:
                                     pass
                                 break
@@ -587,9 +592,9 @@ async def wait_for_apt_lock(container_id, status_msg):
                 return True
                 
             if isinstance(status_msg, discord.Interaction):
-                await status_msg.followup.send(f"🔄 Waiting for package manager to be ready... (Attempt {attempt + 1}/{max_attempts})", ephemeral=True)
+                await status_msg.followup.send(f"ðŸ”„ Waiting for package manager to be ready... (Attempt {attempt + 1}/{max_attempts})", ephemeral=True)
             else:
-                await status_msg.edit(content=f"🔄 Waiting for package manager to be ready... (Attempt {attempt + 1}/{max_attempts})")
+                await status_msg.edit(content=f"ðŸ”„ Waiting for package manager to be ready... (Attempt {attempt + 1}/{max_attempts})")
             await asyncio.sleep(5)
         except Exception as e:
             logger.error(f"Error checking apt lock: {e}")
@@ -646,20 +651,20 @@ async def build_custom_image(vps_id, username, root_password, user_password, bas
             logger.error(f"Error cleaning up temp directory: {e}")
 
 async def setup_container(container_id, status_msg, memory, username, vps_id=None, use_custom_image=False):
-    """Enhanced container setup with Power ⚡ Host ☁️ customization"""
+    """Enhanced container setup with Power âš¡ Host â˜ï¸ customization"""
     try:
         # Ensure container is running
         if isinstance(status_msg, discord.Interaction):
-            await status_msg.followup.send("🔍 Checking container status...", ephemeral=True)
+            await status_msg.followup.send("ðŸ” Checking container status...", ephemeral=True)
         else:
-            await status_msg.edit(content="🔍 Checking container status...")
+            await status_msg.edit(content="ðŸ” Checking container status...")
             
         container = bot.docker_client.containers.get(container_id)
         if container.status != "running":
             if isinstance(status_msg, discord.Interaction):
-                await status_msg.followup.send("🚀 Starting container...", ephemeral=True)
+                await status_msg.followup.send("ðŸš€ Starting container...", ephemeral=True)
             else:
-                await status_msg.edit(content="🚀 Starting container...")
+                await status_msg.edit(content="ðŸš€ Starting container...")
             container.start()
             await asyncio.sleep(5)
 
@@ -669,9 +674,9 @@ async def setup_container(container_id, status_msg, memory, username, vps_id=Non
         # Install tmate and other required packages
         if not use_custom_image:
             if isinstance(status_msg, discord.Interaction):
-                await status_msg.followup.send("📦 Installing required packages...", ephemeral=True)
+                await status_msg.followup.send("ðŸ“¦ Installing required packages...", ephemeral=True)
             else:
-                await status_msg.edit(content="📦 Installing required packages...")
+                await status_msg.edit(content="ðŸ“¦ Installing required packages...")
                 
             # Update package list
             success, output = await run_docker_command(container_id, ["apt-get", "update"])
@@ -689,9 +694,9 @@ async def setup_container(container_id, status_msg, memory, username, vps_id=Non
 
         # Setup SSH
         if isinstance(status_msg, discord.Interaction):
-            await status_msg.followup.send("🔐 Configuring SSH access...", ephemeral=True)
+            await status_msg.followup.send("ðŸ” Configuring SSH access...", ephemeral=True)
         else:
-            await status_msg.edit(content="🔐 Configuring SSH access...")
+            await status_msg.edit(content="ðŸ” Configuring SSH access...")
             
         # Create user and set password (if not using custom image)
         if not use_custom_image:
@@ -709,11 +714,11 @@ async def setup_container(container_id, status_msg, memory, username, vps_id=Non
                 if not success:
                     raise Exception(f"Failed to setup user: {output}")
 
-        # Set Power ⚡ Host ☁️ customization
+        # Set Power âš¡ Host â˜ï¸ customization
         if isinstance(status_msg, discord.Interaction):
-            await status_msg.followup.send("🎨 Setting up Power ⚡ Host ☁️ customization...", ephemeral=True)
+            await status_msg.followup.send("ðŸŽ¨ Setting up Power âš¡ Host â˜ï¸ customization...", ephemeral=True)
         else:
-            await status_msg.edit(content="🎨 Setting up Power ⚡ Host ☁️ customization...")
+            await status_msg.edit(content="ðŸŽ¨ Setting up Power âš¡ Host â˜ï¸ customization...")
             
         # Create welcome message file
         welcome_cmd = f"echo '{WELCOME_MESSAGE}' > /etc/motd && echo 'echo \"{WELCOME_MESSAGE}\"' >> /home/{username}/.bashrc"
@@ -731,9 +736,9 @@ async def setup_container(container_id, status_msg, memory, username, vps_id=Non
 
         # Set memory limit in cgroup
         if isinstance(status_msg, discord.Interaction):
-            await status_msg.followup.send("⚙️ Setting resource limits...", ephemeral=True)
+            await status_msg.followup.send("âš™ï¸ Setting resource limits...", ephemeral=True)
         else:
-            await status_msg.edit(content="⚙️ Setting resource limits...")
+            await status_msg.edit(content="âš™ï¸ Setting resource limits...")
             
         memory_bytes = memory * 1024 * 1024 * 1024
         success, output = await run_docker_command(container_id, ["bash", "-c", f"echo {memory_bytes} > /sys/fs/cgroup/memory.max"])
@@ -761,18 +766,18 @@ async def setup_container(container_id, status_msg, memory, username, vps_id=Non
                 logger.warning(f"Security setup command failed: {cmd} - {output}")
 
         if isinstance(status_msg, discord.Interaction):
-            await status_msg.followup.send("✅ Power ⚡ Host ☁️ VPS setup completed successfully!", ephemeral=True)
+            await status_msg.followup.send("âœ… Power âš¡ Host â˜ï¸ VPS setup completed successfully!", ephemeral=True)
         else:
-            await status_msg.edit(content="✅ Power ⚡ Host ☁️ VPS setup completed successfully!")
+            await status_msg.edit(content="âœ… Power âš¡ Host â˜ï¸ VPS setup completed successfully!")
             
         return True, ssh_password, vps_id
     except Exception as e:
         error_msg = f"Setup failed: {str(e)}"
         logger.error(error_msg)
         if isinstance(status_msg, discord.Interaction):
-            await status_msg.followup.send(f"❌ {error_msg}", ephemeral=True)
+            await status_msg.followup.send(f"âŒ {error_msg}", ephemeral=True)
         else:
-            await status_msg.edit(content=f"❌ {error_msg}")
+            await status_msg.edit(content=f"âŒ {error_msg}")
         return False, None, None
 
 intents = discord.Intents.default()
@@ -799,7 +804,7 @@ async def on_ready():
                     logger.error(f"Error starting container: {e}")
     
     try:
-        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Power ⚡ Host ☁️ VPS"))
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Power âš¡ Host â˜ï¸ VPS"))
         synced_commands = await bot.tree.sync()
         logger.info(f"Synced {len(synced_commands)} slash commands")
     except Exception as e:
@@ -809,7 +814,7 @@ async def on_ready():
 async def show_commands(ctx):
     """Show all available commands"""
     try:
-        embed = discord.Embed(title="🤖 Power ⚡ Host ☁️ VPS Bot Commands", color=discord.Color.blue())
+        embed = discord.Embed(title="ðŸ¤– Power âš¡ Host â˜ï¸ VPS Bot Commands", color=discord.Color.blue())
         
         # User commands
         embed.add_field(name="User Commands", value="""
@@ -856,7 +861,7 @@ async def show_commands(ctx):
         await ctx.send(embed=embed)
     except Exception as e:
         logger.error(f"Error in show_commands: {e}")
-        await ctx.send("❌ An error occurred while processing your request.")
+        await ctx.send("âŒ An error occurred while processing your request.")
 
 @bot.hybrid_command(name='add_admin', description='Add a new admin (Admin only)')
 @app_commands.describe(
@@ -865,11 +870,11 @@ async def show_commands(ctx):
 async def add_admin(ctx, user: discord.User):
     """Add a new admin user"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
     
     bot.db.add_admin(user.id)
-    await ctx.send(f"✅ {user.mention} has been added as an admin!", ephemeral=True)
+    await ctx.send(f"âœ… {user.mention} has been added as an admin!", ephemeral=True)
 
 @bot.hybrid_command(name='remove_admin', description='Remove an admin (Owner only)')
 @app_commands.describe(
@@ -878,17 +883,17 @@ async def add_admin(ctx, user: discord.User):
 async def remove_admin(ctx, user: discord.User):
     """Remove an admin user (Owner only)"""
     if ctx.author.id != 1210291131301101618:  # Only the owner can remove admins
-        await ctx.send("❌ Only the owner can remove admins!", ephemeral=True)
+        await ctx.send("âŒ Only the owner can remove admins!", ephemeral=True)
         return
     
     bot.db.remove_admin(user.id)
-    await ctx.send(f"✅ {user.mention} has been removed from admins!", ephemeral=True)
+    await ctx.send(f"âœ… {user.mention} has been removed from admins!", ephemeral=True)
 
 @bot.hybrid_command(name='list_admins', description='List all admin users')
 async def list_admins(ctx):
     """List all admin users"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
     
     embed = discord.Embed(title="Admin Users", color=discord.Color.blue())
@@ -923,51 +928,51 @@ async def list_admins(ctx):
     disk="Disk space in GB",
     owner="User who will own the VPS",
     os_image="OS image to use",
-    use_custom_image="Use custom Power ⚡ Host ☁️ image (recommended)"
+    use_custom_image="Use custom Power âš¡ Host â˜ï¸ image (recommended)"
 )
 async def create_vps_command(ctx, memory: int, cpu: int, disk: int, owner: discord.Member, 
                            os_image: str = DEFAULT_OS_IMAGE, use_custom_image: bool = True):
     """Create a new VPS with specified parameters (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     if bot.db.is_user_banned(owner.id):
-        await ctx.send("❌ This user is banned from creating VPS!", ephemeral=True)
+        await ctx.send("âŒ This user is banned from creating VPS!", ephemeral=True)
         return
 
     if not ctx.guild:
-        await ctx.send("❌ This command can only be used in a server!", ephemeral=True)
+        await ctx.send("âŒ This command can only be used in a server!", ephemeral=True)
         return
 
     if not bot.docker_client:
-        await ctx.send("❌ Docker is not available. Please contact the administrator.", ephemeral=True)
+        await ctx.send("âŒ Docker is not available. Please contact the administrator.", ephemeral=True)
         return
 
     try:
         # Validate inputs
         if memory < 1 or memory > 5120000:
-            await ctx.send("❌ Memory must be between 1GB and 512GB", ephemeral=True)
+            await ctx.send("âŒ Memory must be between 1GB and 512GB", ephemeral=True)
             return
         if cpu < 1 or cpu > 320000:
-            await ctx.send("❌ CPU cores must be between 1 and 32", ephemeral=True)
+            await ctx.send("âŒ CPU cores must be between 1 and 32", ephemeral=True)
             return
         if disk < 10 or disk > 10000000:
-            await ctx.send("❌ Disk space must be between 10GB and 1000GB", ephemeral=True)
+            await ctx.send("âŒ Disk space must be between 10GB and 1000GB", ephemeral=True)
             return
 
         # Check if we've reached container limit
         containers = bot.docker_client.containers.list(all=True)
         if len(containers) >= bot.db.get_setting('max_containers', MAX_CONTAINERS):
-            await ctx.send(f"❌ Maximum container limit reached ({bot.db.get_setting('max_containers')}). Please delete some VPS instances first.", ephemeral=True)
+            await ctx.send(f"âŒ Maximum container limit reached ({bot.db.get_setting('max_containers')}). Please delete some VPS instances first.", ephemeral=True)
             return
 
         # Check if user already has maximum VPS instances
         if bot.db.get_user_vps_count(owner.id) >= bot.db.get_setting('max_vps_per_user', MAX_VPS_PER_USER):
-            await ctx.send(f"❌ {owner.mention} already has the maximum number of VPS instances ({bot.db.get_setting('max_vps_per_user')})", ephemeral=True)
+            await ctx.send(f"âŒ {owner.mention} already has the maximum number of VPS instances ({bot.db.get_setting('max_vps_per_user')})", ephemeral=True)
             return
 
-        status_msg = await ctx.send("🚀 Creating Power ⚡ Host ☁️ VPS instance... This may take a few minutes.")
+        status_msg = await ctx.send("ðŸš€ Creating Power âš¡ Host â˜ï¸ VPS instance... This may take a few minutes.")
 
         memory_bytes = memory * 1024 * 1024 * 1024
         vps_id = generate_vps_id()
@@ -977,14 +982,14 @@ async def create_vps_command(ctx, memory: int, cpu: int, disk: int, owner: disco
         token = generate_token()
 
         if use_custom_image:
-            await status_msg.edit(content="🔨 Building custom Docker image...")
+            await status_msg.edit(content="ðŸ”¨ Building custom Docker image...")
             try:
                 image_tag = await build_custom_image(vps_id, username, root_password, user_password, os_image)
             except Exception as e:
-                await status_msg.edit(content=f"❌ Failed to build Docker image: {str(e)}")
+                await status_msg.edit(content=f"âŒ Failed to build Docker image: {str(e)}")
                 return
 
-            await status_msg.edit(content="⚙️ Initializing container...")
+            await status_msg.edit(content="âš™ï¸ Initializing container...")
             try:
                 container = bot.docker_client.containers.run(
                     image_tag,
@@ -1002,10 +1007,10 @@ async def create_vps_command(ctx, memory: int, cpu: int, disk: int, owner: disco
                     restart_policy={"Name": "always"}
                 )
             except Exception as e:
-                await status_msg.edit(content=f"❌ Failed to start container: {str(e)}")
+                await status_msg.edit(content=f"âŒ Failed to start container: {str(e)}")
                 return
         else:
-            await status_msg.edit(content="⚙️ Initializing container...")
+            await status_msg.edit(content="âš™ï¸ Initializing container...")
             try:
                 container = bot.docker_client.containers.run(
                     os_image,
@@ -1025,7 +1030,7 @@ async def create_vps_command(ctx, memory: int, cpu: int, disk: int, owner: disco
                     restart_policy={"Name": "always"}
                 )
             except docker.errors.ImageNotFound:
-                await status_msg.edit(content=f"❌ OS image {os_image} not found. Using default {DEFAULT_OS_IMAGE}")
+                await status_msg.edit(content=f"âŒ OS image {os_image} not found. Using default {DEFAULT_OS_IMAGE}")
                 container = bot.docker_client.containers.run(
                     DEFAULT_OS_IMAGE,
                     detach=True,
@@ -1045,7 +1050,7 @@ async def create_vps_command(ctx, memory: int, cpu: int, disk: int, owner: disco
                 )
                 os_image = DEFAULT_OS_IMAGE
 
-        await status_msg.edit(content="🔧 Container created. Setting up Power ⚡ Host ☁️ environment...")
+        await status_msg.edit(content="ðŸ”§ Container created. Setting up Power âš¡ Host â˜ï¸ environment...")
         await asyncio.sleep(5)
 
         setup_success, ssh_password, _ = await setup_container(
@@ -1059,7 +1064,7 @@ async def create_vps_command(ctx, memory: int, cpu: int, disk: int, owner: disco
         if not setup_success:
             raise Exception("Failed to setup container")
 
-        await status_msg.edit(content="🔐 Starting SSH session...")
+        await status_msg.edit(content="ðŸ” Starting SSH session...")
 
         exec_cmd = await asyncio.create_subprocess_exec(
             "docker", "exec", container.id, "tmate", "-F",
@@ -1095,26 +1100,26 @@ async def create_vps_command(ctx, memory: int, cpu: int, disk: int, owner: disco
         bot.db.add_vps(vps_data)
         
         try:
-            embed = discord.Embed(title="🎉 Power ⚡ Host ☁️ VPS Creation Successful", color=discord.Color.green())
-            embed.add_field(name="🆔 VPS ID", value=vps_id, inline=True)
-            embed.add_field(name="💾 Memory", value=f"{memory}GB", inline=True)
-            embed.add_field(name="⚡ CPU", value=f"{cpu} cores", inline=True)
-            embed.add_field(name="💿 Disk", value=f"{disk}GB", inline=True)
-            embed.add_field(name="👤 Username", value=username, inline=True)
-            embed.add_field(name="🔑 User Password", value=f"||{ssh_password}||", inline=False)
+            embed = discord.Embed(title="ðŸŽ‰ Power âš¡ Host â˜ï¸ VPS Creation Successful", color=discord.Color.green())
+            embed.add_field(name="ðŸ†” VPS ID", value=vps_id, inline=True)
+            embed.add_field(name="ðŸ’¾ Memory", value=f"{memory}GB", inline=True)
+            embed.add_field(name="âš¡ CPU", value=f"{cpu} cores", inline=True)
+            embed.add_field(name="ðŸ’¿ Disk", value=f"{disk}GB", inline=True)
+            embed.add_field(name="ðŸ‘¤ Username", value=username, inline=True)
+            embed.add_field(name="ðŸ”‘ User Password", value=f"||{ssh_password}||", inline=False)
             if use_custom_image:
-                embed.add_field(name="🔑 Root Password", value=f"||{root_password}||", inline=False)
-            embed.add_field(name="🔒 Tmate Session", value=f"```{ssh_session_line}```", inline=False)
-            embed.add_field(name="🔌 Direct SSH", value=f"```ssh {username}@<server-ip>```", inline=False)
-            embed.add_field(name="ℹ️ Note", value="This is a Power ⚡ Host ☁️ VPS instance. You can install and configure additional packages as needed.", inline=False)
+                embed.add_field(name="ðŸ”‘ Root Password", value=f"||{root_password}||", inline=False)
+            embed.add_field(name="ðŸ”’ Tmate Session", value=f"```{ssh_session_line}```", inline=False)
+            embed.add_field(name="ðŸ”Œ Direct SSH", value=f"```ssh {username}@<server-ip>```", inline=False)
+            embed.add_field(name="â„¹ï¸ Note", value="This is a Power âš¡ Host â˜ï¸ VPS instance. You can install and configure additional packages as needed.", inline=False)
             
             await owner.send(embed=embed)
-            await status_msg.edit(content=f"✅ Power ⚡ Host ☁️ VPS creation successful! VPS has been created for {owner.mention}. Check your DMs for connection details.")
+            await status_msg.edit(content=f"âœ… Power âš¡ Host â˜ï¸ VPS creation successful! VPS has been created for {owner.mention}. Check your DMs for connection details.")
         except discord.Forbidden:
-            await status_msg.edit(content=f"❌ I couldn't send a DM to {owner.mention}. Please ask them to enable DMs from server members.")
+            await status_msg.edit(content=f"âŒ I couldn't send a DM to {owner.mention}. Please ask them to enable DMs from server members.")
             
     except Exception as e:
-        error_msg = f"❌ An error occurred while creating the VPS: {str(e)}"
+        error_msg = f"âŒ An error occurred while creating the VPS: {str(e)}"
         logger.error(error_msg)
         await ctx.send(error_msg)
         if 'container' in locals():
@@ -1134,7 +1139,7 @@ async def list_vps(ctx):
             await ctx.send("You don't have any VPS instances.", ephemeral=True)
             return
 
-        embed = discord.Embed(title="Your Power ⚡ Host ☁️ VPS Instances", color=discord.Color.blue())
+        embed = discord.Embed(title="Your Power âš¡ Host â˜ï¸ VPS Instances", color=discord.Color.blue())
         
         for vps in user_vps:
             try:
@@ -1164,13 +1169,13 @@ Restarts: {vps.get('restart_count', 0)}
         await ctx.send(embed=embed)
     except Exception as e:
         logger.error(f"Error in list_vps: {e}")
-        await ctx.send(f"❌ Error listing VPS instances: {str(e)}")
+        await ctx.send(f"âŒ Error listing VPS instances: {str(e)}")
 
 @bot.hybrid_command(name='vps_list', description='List all VPS instances (Admin only)')
 async def admin_list_vps(ctx):
     """List all VPS instances (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     try:
@@ -1179,7 +1184,7 @@ async def admin_list_vps(ctx):
             await ctx.send("No VPS instances found.", ephemeral=True)
             return
 
-        embed = discord.Embed(title="All Power ⚡ Host ☁️ VPS Instances", color=discord.Color.blue())
+        embed = discord.Embed(title="All Power âš¡ Host â˜ï¸ VPS Instances", color=discord.Color.blue())
         valid_vps_count = 0
         
         for token, vps in all_vps.items():
@@ -1229,7 +1234,7 @@ Restarts: {vps.get('restart_count', 0)}
         await ctx.send(embed=embed)
     except Exception as e:
         logger.error(f"Error in admin_list_vps: {e}")
-        await ctx.send(f"❌ Error listing VPS instances: {str(e)}")
+        await ctx.send(f"âŒ Error listing VPS instances: {str(e)}")
 
 @bot.hybrid_command(name='delete_vps', description='Delete a VPS instance (Admin only)')
 @app_commands.describe(
@@ -1238,13 +1243,13 @@ Restarts: {vps.get('restart_count', 0)}
 async def delete_vps(ctx, vps_id: str):
     """Delete a VPS instance (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     try:
         token, vps = bot.db.get_vps_by_id(vps_id)
         if not vps:
-            await ctx.send("❌ VPS not found!", ephemeral=True)
+            await ctx.send("âŒ VPS not found!", ephemeral=True)
             return
         
         try:
@@ -1257,10 +1262,10 @@ async def delete_vps(ctx, vps_id: str):
         
         bot.db.remove_vps(token)
         
-        await ctx.send(f"✅ Power ⚡ Host ☁️ VPS {vps_id} has been deleted successfully!")
+        await ctx.send(f"âœ… Power âš¡ Host â˜ï¸ VPS {vps_id} has been deleted successfully!")
     except Exception as e:
         logger.error(f"Error in delete_vps: {e}")
-        await ctx.send(f"❌ Error deleting VPS: {str(e)}")
+        await ctx.send(f"âŒ Error deleting VPS: {str(e)}")
 
 @bot.hybrid_command(name='connect_vps', description='Connect to a VPS using the provided token')
 @app_commands.describe(
@@ -1270,11 +1275,11 @@ async def connect_vps(ctx, token: str):
     """Connect to a VPS using the provided token"""
     vps = bot.db.get_vps_by_token(token)
     if not vps:
-        await ctx.send("❌ Invalid token!", ephemeral=True)
+        await ctx.send("âŒ Invalid token!", ephemeral=True)
         return
         
     if str(ctx.author.id) != vps["created_by"] and not has_admin_role(ctx):
-        await ctx.send("❌ You don't have permission to access this VPS!", ephemeral=True)
+        await ctx.send("âŒ You don't have permission to access this VPS!", ephemeral=True)
         return
 
     try:
@@ -1284,7 +1289,7 @@ async def connect_vps(ctx, token: str):
                 container.start()
                 await asyncio.sleep(5)
         except:
-            await ctx.send("❌ VPS instance not found or is no longer available.", ephemeral=True)
+            await ctx.send("âŒ VPS instance not found or is no longer available.", ephemeral=True)
             return
 
         exec_cmd = await asyncio.create_subprocess_exec(
@@ -1299,7 +1304,7 @@ async def connect_vps(ctx, token: str):
 
         bot.db.update_vps(token, {"tmate_session": ssh_session_line})
         
-        embed = discord.Embed(title="Power ⚡ Host ☁️ VPS Connection Details", color=discord.Color.blue())
+        embed = discord.Embed(title="Power âš¡ Host â˜ï¸ VPS Connection Details", color=discord.Color.blue())
         embed.add_field(name="Username", value=vps["username"], inline=True)
         embed.add_field(name="SSH Password", value=f"||{vps.get('password', 'Not set')}||", inline=True)
         embed.add_field(name="Tmate Session", value=f"```{ssh_session_line}```", inline=False)
@@ -1307,20 +1312,20 @@ async def connect_vps(ctx, token: str):
 1. Copy the Tmate session command
 2. Open your terminal
 3. Paste and run the command
-4. You will be connected to your Power ⚡ Host ☁️ VPS
+4. You will be connected to your Power âš¡ Host â˜ï¸ VPS
 
 Or use direct SSH:
 ```ssh {username}@<server-ip>```
 """.format(username=vps["username"]), inline=False)
         
         await ctx.author.send(embed=embed)
-        await ctx.send("✅ Connection details sent to your DMs! Use the Tmate command to connect to your Power ⚡ Host ☁️ VPS.", ephemeral=True)
+        await ctx.send("âœ… Connection details sent to your DMs! Use the Tmate command to connect to your Power âš¡ Host â˜ï¸ VPS.", ephemeral=True)
         
     except discord.Forbidden:
-        await ctx.send("❌ I couldn't send you a DM. Please enable DMs from server members.", ephemeral=True)
+        await ctx.send("âŒ I couldn't send you a DM. Please enable DMs from server members.", ephemeral=True)
     except Exception as e:
         logger.error(f"Error in connect_vps: {e}")
-        await ctx.send(f"❌ An error occurred while connecting to the VPS: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ An error occurred while connecting to the VPS: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='vps_stats', description='Show resource usage for a VPS')
 @app_commands.describe(
@@ -1331,13 +1336,13 @@ async def vps_stats(ctx, vps_id: str):
     try:
         token, vps = bot.db.get_vps_by_id(vps_id)
         if not vps or (vps["created_by"] != str(ctx.author.id) and not has_admin_role(ctx)):
-            await ctx.send("❌ VPS not found or you don't have access to it!", ephemeral=True)
+            await ctx.send("âŒ VPS not found or you don't have access to it!", ephemeral=True)
             return
 
         try:
             container = bot.docker_client.containers.get(vps["container_id"])
             if container.status != "running":
-                await ctx.send("❌ VPS is not running!", ephemeral=True)
+                await ctx.send("âŒ VPS is not running!", ephemeral=True)
                 return
 
             # Get memory stats
@@ -1381,10 +1386,10 @@ Disk Allocated: {vps['disk']}GB
             
             await ctx.send(embed=embed)
         except Exception as e:
-            await ctx.send(f"❌ Error checking VPS stats: {str(e)}", ephemeral=True)
+            await ctx.send(f"âŒ Error checking VPS stats: {str(e)}", ephemeral=True)
     except Exception as e:
         logger.error(f"Error in vps_stats: {e}")
-        await ctx.send(f"❌ Error: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='change_ssh_password', description='Change the SSH password for a VPS')
 @app_commands.describe(
@@ -1395,13 +1400,13 @@ async def change_ssh_password(ctx, vps_id: str):
     try:
         token, vps = bot.db.get_vps_by_id(vps_id)
         if not vps or vps["created_by"] != str(ctx.author.id):
-            await ctx.send("❌ VPS not found or you don't have access to it!", ephemeral=True)
+            await ctx.send("âŒ VPS not found or you don't have access to it!", ephemeral=True)
             return
 
         try:
             container = bot.docker_client.containers.get(vps["container_id"])
             if container.status != "running":
-                await ctx.send("❌ VPS is not running!", ephemeral=True)
+                await ctx.send("âŒ VPS is not running!", ephemeral=True)
                 return
 
             new_password = generate_ssh_password()
@@ -1423,18 +1428,18 @@ async def change_ssh_password(ctx, vps_id: str):
             embed.add_field(name="New Password", value=f"||{new_password}||", inline=False)
             
             await ctx.author.send(embed=embed)
-            await ctx.send("✅ SSH password updated successfully! Check your DMs for the new password.", ephemeral=True)
+            await ctx.send("âœ… SSH password updated successfully! Check your DMs for the new password.", ephemeral=True)
         except Exception as e:
-            await ctx.send(f"❌ Error changing SSH password: {str(e)}", ephemeral=True)
+            await ctx.send(f"âŒ Error changing SSH password: {str(e)}", ephemeral=True)
     except Exception as e:
         logger.error(f"Error in change_ssh_password: {e}")
-        await ctx.send(f"❌ Error: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='admin_stats', description='Show system statistics (Admin only)')
 async def admin_stats(ctx):
     """Show system statistics (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     try:
@@ -1444,7 +1449,7 @@ async def admin_stats(ctx):
         # Get system stats
         stats = bot.system_stats
         
-        embed = discord.Embed(title="Power ⚡ Host ☁️ System Statistics", color=discord.Color.blue())
+        embed = discord.Embed(title="Power âš¡ Host â˜ï¸ System Statistics", color=discord.Color.blue())
         embed.add_field(name="VPS Instances", value=f"Total: {len(bot.db.get_all_vps())}\nRunning: {len([c for c in containers if c.status == 'running'])}", inline=True)
         embed.add_field(name="Docker Containers", value=f"Total: {len(containers)}\nRunning: {len([c for c in containers if c.status == 'running'])}", inline=True)
         embed.add_field(name="CPU Usage", value=f"{stats['cpu_usage']}%", inline=True)
@@ -1457,13 +1462,13 @@ async def admin_stats(ctx):
         await ctx.send(embed=embed)
     except Exception as e:
         logger.error(f"Error in admin_stats: {e}")
-        await ctx.send(f"❌ Error getting system stats: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error getting system stats: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='system_info', description='Show detailed system information (Admin only)')
 async def system_info(ctx):
     """Show detailed system information (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     try:
@@ -1528,7 +1533,7 @@ Bytes Received: {net_io.bytes_recv / (1024**2):.2f}MB
         await ctx.send(embed=embed)
     except Exception as e:
         logger.error(f"Error in system_info: {e}")
-        await ctx.send(f"❌ Error getting system info: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error getting system info: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='container_limit', description='Set maximum container limit (Owner only)')
 @app_commands.describe(
@@ -1537,21 +1542,21 @@ Bytes Received: {net_io.bytes_recv / (1024**2):.2f}MB
 async def set_container_limit(ctx, max_limit: int):
     """Set maximum container limit (Owner only)"""
     if ctx.author.id != 1210291131301101618:  # Only the owner can set limit
-        await ctx.send("❌ Only the owner can set container limit!", ephemeral=True)
+        await ctx.send("âŒ Only the owner can set container limit!", ephemeral=True)
         return
     
     if max_limit < 1 or max_limit > 1000:
-        await ctx.send("❌ Container limit must be between 1 and 1000", ephemeral=True)
+        await ctx.send("âŒ Container limit must be between 1 and 1000", ephemeral=True)
         return
     
     bot.db.set_setting('max_containers', max_limit)
-    await ctx.send(f"✅ Maximum container limit set to {max_limit}", ephemeral=True)
+    await ctx.send(f"âœ… Maximum container limit set to {max_limit}", ephemeral=True)
 
 @bot.hybrid_command(name='cleanup_vps', description='Cleanup inactive VPS instances (Admin only)')
 async def cleanup_vps(ctx):
     """Cleanup inactive VPS instances (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     try:
@@ -1573,12 +1578,12 @@ async def cleanup_vps(ctx):
                 continue
         
         if cleanup_count > 0:
-            await ctx.send(f"✅ Cleaned up {cleanup_count} inactive VPS instances!")
+            await ctx.send(f"âœ… Cleaned up {cleanup_count} inactive VPS instances!")
         else:
-            await ctx.send("ℹ️ No inactive VPS instances found to clean up.")
+            await ctx.send("â„¹ï¸ No inactive VPS instances found to clean up.")
     except Exception as e:
         logger.error(f"Error in cleanup_vps: {e}")
-        await ctx.send(f"❌ Error during cleanup: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error during cleanup: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='vps_shell', description='Get shell access to your VPS')
 @app_commands.describe(
@@ -1589,24 +1594,24 @@ async def vps_shell(ctx, vps_id: str):
     try:
         token, vps = bot.db.get_vps_by_id(vps_id)
         if not vps or (vps["created_by"] != str(ctx.author.id) and not has_admin_role(ctx)):
-            await ctx.send("❌ VPS not found or you don't have access to it!", ephemeral=True)
+            await ctx.send("âŒ VPS not found or you don't have access to it!", ephemeral=True)
             return
 
         try:
             container = bot.docker_client.containers.get(vps["container_id"])
             if container.status != "running":
-                await ctx.send("❌ VPS is not running!", ephemeral=True)
+                await ctx.send("âŒ VPS is not running!", ephemeral=True)
                 return
 
-            await ctx.send(f"✅ Shell access to VPS {vps_id}:\n"
+            await ctx.send(f"âœ… Shell access to VPS {vps_id}:\n"
                           f"```docker exec -it {vps['container_id']} bash```\n"
                           f"Username: {vps['username']}\n"
                           f"Password: ||{vps.get('password', 'Not set')}||", ephemeral=True)
         except Exception as e:
-            await ctx.send(f"❌ Error accessing VPS shell: {str(e)}", ephemeral=True)
+            await ctx.send(f"âŒ Error accessing VPS shell: {str(e)}", ephemeral=True)
     except Exception as e:
         logger.error(f"Error in vps_shell: {e}")
-        await ctx.send(f"❌ Error: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='vps_console', description='Get direct console access to your VPS')
 @app_commands.describe(
@@ -1617,24 +1622,24 @@ async def vps_console(ctx, vps_id: str):
     try:
         token, vps = bot.db.get_vps_by_id(vps_id)
         if not vps or (vps["created_by"] != str(ctx.author.id) and not has_admin_role(ctx)):
-            await ctx.send("❌ VPS not found or you don't have access to it!", ephemeral=True)
+            await ctx.send("âŒ VPS not found or you don't have access to it!", ephemeral=True)
             return
 
         try:
             container = bot.docker_client.containers.get(vps["container_id"])
             if container.status != "running":
-                await ctx.send("❌ VPS is not running!", ephemeral=True)
+                await ctx.send("âŒ VPS is not running!", ephemeral=True)
                 return
 
-            await ctx.send(f"✅ Console access to VPS {vps_id}:\n"
+            await ctx.send(f"âœ… Console access to VPS {vps_id}:\n"
                           f"```docker attach {vps['container_id']}```\n"
                           f"Note: To detach from the console without stopping the container, use Ctrl+P followed by Ctrl+Q", 
                           ephemeral=True)
         except Exception as e:
-            await ctx.send(f"❌ Error accessing VPS console: {str(e)}", ephemeral=True)
+            await ctx.send(f"âŒ Error accessing VPS console: {str(e)}", ephemeral=True)
     except Exception as e:
         logger.error(f"Error in vps_console: {e}")
-        await ctx.send(f"❌ Error: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='vps_usage', description='Show your VPS usage statistics')
 async def vps_usage(ctx):
@@ -1647,7 +1652,7 @@ async def vps_usage(ctx):
         total_disk = sum(vps['disk'] for vps in user_vps)
         total_restarts = sum(vps.get('restart_count', 0) for vps in user_vps)
         
-        embed = discord.Embed(title="Your Power ⚡ Host ☁️ VPS Usage", color=discord.Color.blue())
+        embed = discord.Embed(title="Your Power âš¡ Host â˜ï¸ VPS Usage", color=discord.Color.blue())
         embed.add_field(name="Total VPS Instances", value=len(user_vps), inline=True)
         embed.add_field(name="Total Memory Allocated", value=f"{total_memory}GB", inline=True)
         embed.add_field(name="Total CPU Cores Allocated", value=total_cpu, inline=True)
@@ -1657,13 +1662,13 @@ async def vps_usage(ctx):
         await ctx.send(embed=embed)
     except Exception as e:
         logger.error(f"Error in vps_usage: {e}")
-        await ctx.send(f"❌ Error: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='global_stats', description='Show global usage statistics (Admin only)')
 async def global_stats(ctx):
     """Show global usage statistics (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     try:
@@ -1673,7 +1678,7 @@ async def global_stats(ctx):
         total_disk = sum(vps['disk'] for vps in all_vps.values())
         total_restarts = sum(vps.get('restart_count', 0) for vps in all_vps.values())
         
-        embed = discord.Emembed(title="Power ⚡ Host ☁️ Global Usage Statistics", color=discord.Color.blue())
+        embed = discord.Emembed(title="Power âš¡ Host â˜ï¸ Global Usage Statistics", color=discord.Color.blue())
         embed.add_field(name="Total VPS Created", value=bot.db.get_stat('total_vps_created'), inline=True)
         embed.add_field(name="Total Restarts", value=bot.db.get_stat('total_restarts'), inline=True)
         embed.add_field(name="Current VPS Instances", value=len(all_vps), inline=True)
@@ -1685,7 +1690,7 @@ async def global_stats(ctx):
         await ctx.send(embed=embed)
     except Exception as e:
         logger.error(f"Error in global_stats: {e}")
-        await ctx.send(f"❌ Error: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='migrate_vps', description='Migrate a VPS to another host (Admin only)')
 @app_commands.describe(
@@ -1694,16 +1699,16 @@ async def global_stats(ctx):
 async def migrate_vps(ctx, vps_id: str):
     """Migrate a VPS to another host (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     try:
         token, vps = bot.db.get_vps_by_id(vps_id)
         if not vps:
-            await ctx.send("❌ VPS not found!", ephemeral=True)
+            await ctx.send("âŒ VPS not found!", ephemeral=True)
             return
 
-        status_msg = await ctx.send(f"🔄 Preparing to migrate VPS {vps_id}...")
+        status_msg = await ctx.send(f"ðŸ”„ Preparing to migrate VPS {vps_id}...")
         
         # Create a snapshot
         backup_id = generate_vps_id()[:8]
@@ -1712,7 +1717,7 @@ async def migrate_vps(ctx, vps_id: str):
         os.makedirs(backup_dir, exist_ok=True)
         backup_file = f"{backup_dir}/{backup_id}.tar"
         
-        await status_msg.edit(content=f"🔄 Creating snapshot {backup_id} for migration...")
+        await status_msg.edit(content=f"ðŸ”„ Creating snapshot {backup_id} for migration...")
         
         process = await asyncio.create_subprocess_exec(
             "docker", "export", "-o", backup_file, vps["container_id"],
@@ -1724,11 +1729,11 @@ async def migrate_vps(ctx, vps_id: str):
         if process.returncode != 0:
             raise Exception(f"Snapshot failed: {stderr.decode()}")
         
-        await status_msg.edit(content=f"✅ Snapshot {backup_id} created successfully. Please download this file and import it on the new host: {backup_file}")
+        await status_msg.edit(content=f"âœ… Snapshot {backup_id} created successfully. Please download this file and import it on the new host: {backup_file}")
         
     except Exception as e:
         logger.error(f"Error in migrate_vps: {e}")
-        await ctx.send(f"❌ Error during migration: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error during migration: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='emergency_stop', description='Force stop a problematic VPS (Admin only)')
 @app_commands.describe(
@@ -1737,13 +1742,13 @@ async def migrate_vps(ctx, vps_id: str):
 async def emergency_stop(ctx, vps_id: str):
     """Force stop a problematic VPS (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     try:
         token, vps = bot.db.get_vps_by_id(vps_id)
         if not vps:
-            await ctx.send("❌ VPS not found!", ephemeral=True)
+            await ctx.send("âŒ VPS not found!", ephemeral=True)
             return
 
         try:
@@ -1752,13 +1757,13 @@ async def emergency_stop(ctx, vps_id: str):
                 await ctx.send("VPS is already stopped!", ephemeral=True)
                 return
             
-            await ctx.send("⚠️ Attempting to force stop the VPS... This may take a moment.", ephemeral=True)
+            await ctx.send("âš ï¸ Attempting to force stop the VPS... This may take a moment.", ephemeral=True)
             
             # Try normal stop first
             try:
                 container.stop(timeout=10)
                 bot.db.update_vps(token, {'status': 'stopped'})
-                await ctx.send("✅ VPS stopped successfully!", ephemeral=True)
+                await ctx.send("âœ… VPS stopped successfully!", ephemeral=True)
                 return
             except:
                 pass
@@ -1767,15 +1772,15 @@ async def emergency_stop(ctx, vps_id: str):
             try:
                 subprocess.run(["docker", "kill", vps["container_id"]], check=True)
                 bot.db.update_vps(token, {'status': 'stopped'})
-                await ctx.send("✅ VPS killed forcefully!", ephemeral=True)
+                await ctx.send("âœ… VPS killed forcefully!", ephemeral=True)
             except subprocess.CalledProcessError as e:
                 raise Exception(f"Failed to kill container: {e}")
             
         except Exception as e:
-            await ctx.send(f"❌ Error stopping VPS: {str(e)}", ephemeral=True)
+            await ctx.send(f"âŒ Error stopping VPS: {str(e)}", ephemeral=True)
     except Exception as e:
         logger.error(f"Error in emergency_stop: {e}")
-        await ctx.send(f"❌ Error: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='emergency_remove', description='Force remove a problematic VPS (Admin only)')
 @app_commands.describe(
@@ -1784,13 +1789,13 @@ async def emergency_stop(ctx, vps_id: str):
 async def emergency_remove(ctx, vps_id: str):
     """Force remove a problematic VPS (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     try:
         token, vps = bot.db.get_vps_by_id(vps_id)
         if not vps:
-            await ctx.send("❌ VPS not found!", ephemeral=True)
+            await ctx.send("âŒ VPS not found!", ephemeral=True)
             return
 
         try:
@@ -1810,12 +1815,12 @@ async def emergency_remove(ctx, vps_id: str):
             # Remove from data
             bot.db.remove_vps(token)
             
-            await ctx.send("✅ VPS removed forcefully!", ephemeral=True)
+            await ctx.send("âœ… VPS removed forcefully!", ephemeral=True)
         except Exception as e:
-            await ctx.send(f"❌ Error removing VPS: {str(e)}", ephemeral=True)
+            await ctx.send(f"âŒ Error removing VPS: {str(e)}", ephemeral=True)
     except Exception as e:
         logger.error(f"Error in emergency_remove: {e}")
-        await ctx.send(f"❌ Error: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='suspend_vps', description='Suspend a VPS (Admin only)')
 @app_commands.describe(
@@ -1824,17 +1829,17 @@ async def emergency_remove(ctx, vps_id: str):
 async def suspend_vps(ctx, vps_id: str):
     """Suspend a VPS (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     try:
         token, vps = bot.db.get_vps_by_id(vps_id)
         if not vps:
-            await ctx.send("❌ VPS not found!", ephemeral=True)
+            await ctx.send("âŒ VPS not found!", ephemeral=True)
             return
 
         if vps['status'] == 'suspended':
-            await ctx.send("❌ VPS is already suspended!", ephemeral=True)
+            await ctx.send("âŒ VPS is already suspended!", ephemeral=True)
             return
 
         try:
@@ -1844,18 +1849,18 @@ async def suspend_vps(ctx, vps_id: str):
             logger.error(f"Error stopping container for suspend: {e}")
 
         bot.db.update_vps(token, {'status': 'suspended'})
-        await ctx.send(f"✅ VPS {vps_id} has been suspended!")
+        await ctx.send(f"âœ… VPS {vps_id} has been suspended!")
 
         # Notify owner
         try:
             owner = await bot.fetch_user(int(vps['created_by']))
-            await owner.send(f"⚠️ Your VPS {vps_id} has been suspended by an admin. Contact support for details.")
+            await owner.send(f"âš ï¸ Your VPS {vps_id} has been suspended by an admin. Contact support for details.")
         except:
             pass
 
     except Exception as e:
         logger.error(f"Error in suspend_vps: {e}")
-        await ctx.send(f"❌ Error suspending VPS: {str(e)}")
+        await ctx.send(f"âŒ Error suspending VPS: {str(e)}")
 
 @bot.hybrid_command(name='unsuspend_vps', description='Unsuspend a VPS (Admin only)')
 @app_commands.describe(
@@ -1864,17 +1869,17 @@ async def suspend_vps(ctx, vps_id: str):
 async def unsuspend_vps(ctx, vps_id: str):
     """Unsuspend a VPS (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     try:
         token, vps = bot.db.get_vps_by_id(vps_id)
         if not vps:
-            await ctx.send("❌ VPS not found!", ephemeral=True)
+            await ctx.send("âŒ VPS not found!", ephemeral=True)
             return
 
         if vps['status'] != 'suspended':
-            await ctx.send("❌ VPS is not suspended!", ephemeral=True)
+            await ctx.send("âŒ VPS is not suspended!", ephemeral=True)
             return
 
         try:
@@ -1882,22 +1887,22 @@ async def unsuspend_vps(ctx, vps_id: str):
             container.start()
         except Exception as e:
             logger.error(f"Error starting container for unsuspend: {e}")
-            await ctx.send(f"❌ Error starting container: {str(e)}")
+            await ctx.send(f"âŒ Error starting container: {str(e)}")
             return
 
         bot.db.update_vps(token, {'status': 'running'})
-        await ctx.send(f"✅ VPS {vps_id} has been unsuspended!")
+        await ctx.send(f"âœ… VPS {vps_id} has been unsuspended!")
 
         # Notify owner
         try:
             owner = await bot.fetch_user(int(vps['created_by']))
-            await owner.send(f"✅ Your VPS {vps_id} has been unsuspended by an admin.")
+            await owner.send(f"âœ… Your VPS {vps_id} has been unsuspended by an admin.")
         except:
             pass
 
     except Exception as e:
         logger.error(f"Error in unsuspend_vps: {e}")
-        await ctx.send(f"❌ Error unsuspending VPS: {str(e)}")
+        await ctx.send(f"âŒ Error unsuspending VPS: {str(e)}")
 
 @bot.hybrid_command(name='edit_vps', description='Edit VPS specifications (Admin only)')
 @app_commands.describe(
@@ -1909,33 +1914,33 @@ async def unsuspend_vps(ctx, vps_id: str):
 async def edit_vps(ctx, vps_id: str, memory: Optional[int] = None, cpu: Optional[int] = None, disk: Optional[int] = None):
     """Edit VPS specifications (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     if memory is None and cpu is None and disk is None:
-        await ctx.send("❌ At least one specification to edit must be provided!", ephemeral=True)
+        await ctx.send("âŒ At least one specification to edit must be provided!", ephemeral=True)
         return
 
     try:
         token, vps = bot.db.get_vps_by_id(vps_id)
         if not vps:
-            await ctx.send("❌ VPS not found!", ephemeral=True)
+            await ctx.send("âŒ VPS not found!", ephemeral=True)
             return
 
         updates = {}
         if memory is not None:
             if memory < 1 or memory > 512:
-                await ctx.send("❌ Memory must be between 1GB and 512GB", ephemeral=True)
+                await ctx.send("âŒ Memory must be between 1GB and 512GB", ephemeral=True)
                 return
             updates['memory'] = memory
         if cpu is not None:
             if cpu < 1 or cpu > 32:
-                await ctx.send("❌ CPU cores must be between 1 and 32", ephemeral=True)
+                await ctx.send("âŒ CPU cores must be between 1 and 32", ephemeral=True)
                 return
             updates['cpu'] = cpu
         if disk is not None:
             if disk < 10 or disk > 1000:
-                await ctx.send("❌ Disk space must be between 10GB and 1000GB", ephemeral=True)
+                await ctx.send("âŒ Disk space must be between 10GB and 1000GB", ephemeral=True)
                 return
             updates['disk'] = disk
 
@@ -1979,15 +1984,15 @@ async def edit_vps(ctx, vps_id: str, memory: Optional[int] = None, cpu: Optional
             if not setup_success:
                 raise Exception("Failed to setup new container")
         except Exception as e:
-            await ctx.send(f"❌ Error updating container: {str(e)}")
+            await ctx.send(f"âŒ Error updating container: {str(e)}")
             return
 
         bot.db.update_vps(token, updates)
-        await ctx.send(f"✅ VPS {vps_id} specifications updated successfully!")
+        await ctx.send(f"âœ… VPS {vps_id} specifications updated successfully!")
 
     except Exception as e:
         logger.error(f"Error in edit_vps: {e}")
-        await ctx.send(f"❌ Error editing VPS: {str(e)}")
+        await ctx.send(f"âŒ Error editing VPS: {str(e)}")
 
 @bot.hybrid_command(name='ban_user', description='Ban a user from creating VPS (Admin only)')
 @app_commands.describe(
@@ -1996,11 +2001,11 @@ async def edit_vps(ctx, vps_id: str, memory: Optional[int] = None, cpu: Optional
 async def ban_user(ctx, user: discord.User):
     """Ban a user from creating VPS (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     bot.db.ban_user(user.id)
-    await ctx.send(f"✅ {user.mention} has been banned from creating VPS!")
+    await ctx.send(f"âœ… {user.mention} has been banned from creating VPS!")
 
 @bot.hybrid_command(name='unban_user', description='Unban a user (Admin only)')
 @app_commands.describe(
@@ -2009,17 +2014,17 @@ async def ban_user(ctx, user: discord.User):
 async def unban_user(ctx, user: discord.User):
     """Unban a user (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     bot.db.unban_user(user.id)
-    await ctx.send(f"✅ {user.mention} has been unbanned!")
+    await ctx.send(f"âœ… {user.mention} has been unbanned!")
 
 @bot.hybrid_command(name='list_banned', description='List banned users (Admin only)')
 async def list_banned(ctx):
     """List banned users (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     banned = bot.db.get_banned_users()
@@ -2042,43 +2047,43 @@ async def list_banned(ctx):
 async def backup_data(ctx):
     """Backup all bot data (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     try:
         if bot.db.backup_data():
-            await ctx.send("✅ Data backup completed successfully!", ephemeral=True)
+            await ctx.send("âœ… Data backup completed successfully!", ephemeral=True)
         else:
-            await ctx.send("❌ Failed to backup data!", ephemeral=True)
+            await ctx.send("âŒ Failed to backup data!", ephemeral=True)
     except Exception as e:
         logger.error(f"Error in backup_data: {e}")
-        await ctx.send(f"❌ Error backing up data: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error backing up data: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='restore_data', description='Restore from backup (Admin only)')
 async def restore_data(ctx):
     """Restore from backup (Admin only)"""
     if not has_admin_role(ctx):
-        await ctx.send("❌ You must be an admin to use this command!", ephemeral=True)
+        await ctx.send("âŒ You must be an admin to use this command!", ephemeral=True)
         return
 
     try:
         if bot.db.restore_data():
-            await ctx.send("✅ Data restore completed successfully!", ephemeral=True)
+            await ctx.send("âœ… Data restore completed successfully!", ephemeral=True)
         else:
-            await ctx.send("❌ Failed to restore data!", ephemeral=True)
+            await ctx.send("âŒ Failed to restore data!", ephemeral=True)
     except Exception as e:
         logger.error(f"Error in restore_data: {e}")
-        await ctx.send(f"❌ Error restoring data: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error restoring data: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='reinstall_bot', description='Reinstall the bot (Owner only)')
 async def reinstall_bot(ctx):
     """Reinstall the bot (Owner only)"""
     if ctx.author.id != 1210291131301101618:  # Only the owner can reinstall
-        await ctx.send("❌ Only the owner can reinstall the bot!", ephemeral=True)
+        await ctx.send("âŒ Only the owner can reinstall the bot!", ephemeral=True)
         return
 
     try:
-        await ctx.send("🔄 Reinstalling Power ⚡ Host ☁️ bot... This may take a few minutes.")
+        await ctx.send("ðŸ”„ Reinstalling Power âš¡ Host â˜ï¸ bot... This may take a few minutes.")
         
         # Create Dockerfile for bot reinstallation
         dockerfile_content = f"""
@@ -2117,14 +2122,14 @@ CMD ["python", "bot.py"]
         if process.returncode != 0:
             raise Exception(f"Failed to build bot image: {stderr.decode()}")
         
-        await ctx.send("✅ Bot reinstalled successfully! Restarting...")
+        await ctx.send("âœ… Bot reinstalled successfully! Restarting...")
         
         # Restart the bot
         os._exit(0)
         
     except Exception as e:
         logger.error(f"Error in reinstall_bot: {e}")
-        await ctx.send(f"❌ Error reinstalling bot: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error reinstalling bot: {str(e)}", ephemeral=True)
 
 class VPSManagementView(ui.View):
     def __init__(self, vps_id, container_id):
@@ -2138,15 +2143,15 @@ class VPSManagementView(ui.View):
         if token:
             bot.db.remove_vps(token)
         
-        embed = discord.Embed(title=f"Power ⚡ Host ☁️ VPS Management - {self.vps_id}", color=discord.Color.red())
-        embed.add_field(name="Status", value="🔴 Container Not Found", inline=True)
+        embed = discord.Embed(title=f"Power âš¡ Host â˜ï¸ VPS Management - {self.vps_id}", color=discord.Color.red())
+        embed.add_field(name="Status", value="ðŸ”´ Container Not Found", inline=True)
         embed.add_field(name="Note", value="This VPS instance is no longer available. Please create a new one.", inline=False)
         
         for item in self.children:
             item.disabled = True
         
         await interaction.message.edit(embed=embed, view=self)
-        await interaction.response.send_message("❌ This VPS instance is no longer available. Please create a new one.", ephemeral=True)
+        await interaction.response.send_message("âŒ This VPS instance is no longer available. Please create a new one.", ephemeral=True)
 
     @discord.ui.button(label="Start VPS", style=discord.ButtonStyle.green)
     async def start_vps(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -2161,7 +2166,7 @@ class VPSManagementView(ui.View):
             
             token, vps = bot.db.get_vps_by_id(self.vps_id)
             if vps['status'] == 'suspended':
-                await interaction.followup.send("❌ This VPS is suspended. Contact admin to unsuspend.", ephemeral=True)
+                await interaction.followup.send("âŒ This VPS is suspended. Contact admin to unsuspend.", ephemeral=True)
                 return
 
             if container.status == "running":
@@ -2174,8 +2179,8 @@ class VPSManagementView(ui.View):
             if token:
                 bot.db.update_vps(token, {'status': 'running'})
             
-            embed = discord.Embed(title=f"Power ⚡ Host ☁️ VPS Management - {self.vps_id}", color=discord.Color.green())
-            embed.add_field(name="Status", value="🟢 Running", inline=True)
+            embed = discord.Embed(title=f"Power âš¡ Host â˜ï¸ VPS Management - {self.vps_id}", color=discord.Color.green())
+            embed.add_field(name="Status", value="ðŸŸ¢ Running", inline=True)
             
             if vps:
                 embed.add_field(name="Memory", value=f"{vps['memory']}GB", inline=True)
@@ -2185,9 +2190,9 @@ class VPSManagementView(ui.View):
                 embed.add_field(name="Created", value=vps['created_at'], inline=True)
             
             await interaction.message.edit(embed=embed)
-            await interaction.followup.send("✅ Power ⚡ Host ☁️ VPS started successfully!", ephemeral=True)
+            await interaction.followup.send("âœ… Power âš¡ Host â˜ï¸ VPS started successfully!", ephemeral=True)
         except Exception as e:
-            await interaction.followup.send(f"❌ Error starting VPS: {str(e)}", ephemeral=True)
+            await interaction.followup.send(f"âŒ Error starting VPS: {str(e)}", ephemeral=True)
 
     @discord.ui.button(label="Stop VPS", style=discord.ButtonStyle.red)
     async def stop_vps(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -2210,8 +2215,8 @@ class VPSManagementView(ui.View):
             if token:
                 bot.db.update_vps(token, {'status': 'stopped'})
             
-            embed = discord.Emembed(title=f"Power ⚡ Host ☁️ VPS Management - {self.vps_id}", color=discord.Color.orange())
-            embed.add_field(name="Status", value="🔴 Stopped", inline=True)
+            embed = discord.Emembed(title=f"Power âš¡ Host â˜ï¸ VPS Management - {self.vps_id}", color=discord.Color.orange())
+            embed.add_field(name="Status", value="ðŸ”´ Stopped", inline=True)
             
             if vps:
                 embed.add_field(name="Memory", value=f"{vps['memory']}GB", inline=True)
@@ -2221,9 +2226,9 @@ class VPSManagementView(ui.View):
                 embed.add_field(name="Created", value=vps['created_at'], inline=True)
             
             await interaction.message.edit(embed=embed)
-            await interaction.followup.send("✅ Power ⚡ Host ☁️ VPS stopped successfully!", ephemeral=True)
+            await interaction.followup.send("âœ… Power âš¡ Host â˜ï¸ VPS stopped successfully!", ephemeral=True)
         except Exception as e:
-            await interaction.followup.send(f"❌ Error stopping VPS: {str(e)}", ephemeral=True)
+            await interaction.followup.send(f"âŒ Error stopping VPS: {str(e)}", ephemeral=True)
 
     @discord.ui.button(label="Restart VPS", style=discord.ButtonStyle.blurple)
     async def restart_vps(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -2238,7 +2243,7 @@ class VPSManagementView(ui.View):
             
             token, vps = bot.db.get_vps_by_id(self.vps_id)
             if vps['status'] == 'suspended':
-                await interaction.followup.send("❌ This VPS is suspended. Contact admin to unsuspend.", ephemeral=True)
+                await interaction.followup.send("âŒ This VPS is suspended. Contact admin to unsuspend.", ephemeral=True)
                 return
 
             container.restart()
@@ -2270,7 +2275,7 @@ class VPSManagementView(ui.View):
                         # Send new SSH details to owner
                         try:
                             owner = await bot.fetch_user(int(vps["created_by"]))
-                            embed = discord.Embed(title=f"Power ⚡ Host ☁️ VPS Restarted - {self.vps_id}", color=discord.Color.blue())
+                            embed = discord.Embed(title=f"Power âš¡ Host â˜ï¸ VPS Restarted - {self.vps_id}", color=discord.Color.blue())
                             embed.add_field(name="New SSH Session", value=f"```{ssh_session_line}```", inline=False)
                             await owner.send(embed=embed)
                         except:
@@ -2278,8 +2283,8 @@ class VPSManagementView(ui.View):
                 except:
                     pass
             
-            embed = discord.Embed(title=f"Power ⚡ Host ☁️ VPS Management - {self.vps_id}", color=discord.Color.green())
-            embed.add_field(name="Status", value="🟢 Running", inline=True)
+            embed = discord.Embed(title=f"Power âš¡ Host â˜ï¸ VPS Management - {self.vps_id}", color=discord.Color.green())
+            embed.add_field(name="Status", value="ðŸŸ¢ Running", inline=True)
             
             if vps:
                 embed.add_field(name="Memory", value=f"{vps['memory']}GB", inline=True)
@@ -2290,9 +2295,9 @@ class VPSManagementView(ui.View):
                 embed.add_field(name="Restart Count", value=vps.get('restart_count', 0) + 1, inline=True)
             
             await interaction.message.edit(embed=embed, view=VPSManagementView(self.vps_id, container.id))
-            await interaction.followup.send("✅ Power ⚡ Host ☁️ VPS restarted successfully! New SSH details sent to owner.", ephemeral=True)
+            await interaction.followup.send("âœ… Power âš¡ Host â˜ï¸ VPS restarted successfully! New SSH details sent to owner.", ephemeral=True)
         except Exception as e:
-            await interaction.followup.send(f"❌ Error restarting VPS: {str(e)}", ephemeral=True)
+            await interaction.followup.send(f"âŒ Error restarting VPS: {str(e)}", ephemeral=True)
 
     @discord.ui.button(label="Reinstall OS", style=discord.ButtonStyle.grey)
     async def reinstall_os(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -2306,7 +2311,7 @@ class VPSManagementView(ui.View):
             view = OSSelectionView(self.vps_id, self.container_id, interaction.message)
             await interaction.response.send_message("Select new OS:", view=view, ephemeral=True)
         except Exception as e:
-            await interaction.response.send_message(f"❌ Error: {str(e)}", ephemeral=True)
+            await interaction.response.send_message(f"âŒ Error: {str(e)}", ephemeral=True)
 
     @discord.ui.button(label="Transfer VPS", style=discord.ButtonStyle.grey)
     async def transfer_vps(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -2340,7 +2345,7 @@ class OSSelectionView(ui.View):
         try:
             token, vps = bot.db.get_vps_by_id(self.vps_id)
             if not vps:
-                await interaction.response.send_message("❌ VPS not found!", ephemeral=True)
+                await interaction.response.send_message("âŒ VPS not found!", ephemeral=True)
                 return
 
             await interaction.response.defer(ephemeral=True)
@@ -2352,7 +2357,7 @@ class OSSelectionView(ui.View):
             except Exception as e:
                 logger.error(f"Error removing old container: {e}")
 
-            status_msg = await interaction.followup.send("🔄 Reinstalling Power ⚡ Host ☁️ VPS... This may take a few minutes.", ephemeral=True)
+            status_msg = await interaction.followup.send("ðŸ”„ Reinstalling Power âš¡ Host â˜ï¸ VPS... This may take a few minutes.", ephemeral=True)
             
             memory_bytes = vps['memory'] * 1024 * 1024 * 1024
 
@@ -2374,7 +2379,7 @@ class OSSelectionView(ui.View):
                     }
                 )
             except docker.errors.ImageNotFound:
-                await status_msg.edit(content=f"❌ OS image {image} not found. Using default {DEFAULT_OS_IMAGE}")
+                await status_msg.edit(content=f"âŒ OS image {image} not found. Using default {DEFAULT_OS_IMAGE}")
                 container = bot.docker_client.containers.run(
                     DEFAULT_OS_IMAGE,
                     detach=True,
@@ -2411,7 +2416,7 @@ class OSSelectionView(ui.View):
                 
                 bot.db.update_vps(token, {'password': ssh_password})
             except Exception as e:
-                await status_msg.edit(content=f"❌ Container setup failed: {str(e)}")
+                await status_msg.edit(content=f"âŒ Container setup failed: {str(e)}")
                 return
 
             try:
@@ -2428,7 +2433,7 @@ class OSSelectionView(ui.View):
                     # Send new SSH details to owner
                     try:
                         owner = await bot.fetch_user(int(vps["created_by"]))
-                        embed = discord.Embed(title=f"Power ⚡ Host ☁️ VPS Reinstalled - {self.vps_id}", color=discord.Color.blue())
+                        embed = discord.Embed(title=f"Power âš¡ Host â˜ï¸ VPS Reinstalled - {self.vps_id}", color=discord.Color.blue())
                         embed.add_field(name="New OS", value=image, inline=True)
                         embed.add_field(name="New SSH Session", value=f"```{ssh_session_line}```", inline=False)
                         embed.add_field(name="New SSH Password", value=f"||{ssh_password}||", inline=False)
@@ -2438,11 +2443,11 @@ class OSSelectionView(ui.View):
             except Exception as e:
                 logger.error(f"Warning: Failed to start tmate session: {e}")
 
-            await status_msg.edit(content="✅ Power ⚡ Host ☁️ VPS reinstalled successfully!")
+            await status_msg.edit(content="âœ… Power âš¡ Host â˜ï¸ VPS reinstalled successfully!")
             
             try:
-                embed = discord.Embed(title=f"Power ⚡ Host ☁️ VPS Management - {self.vps_id}", color=discord.Color.green())
-                embed.add_field(name="Status", value="🟢 Running", inline=True)
+                embed = discord.Embed(title=f"Power âš¡ Host â˜ï¸ VPS Management - {self.vps_id}", color=discord.Color.green())
+                embed.add_field(name="Status", value="ðŸŸ¢ Running", inline=True)
                 embed.add_field(name="Memory", value=f"{vps['memory']}GB", inline=True)
                 embed.add_field(name="CPU", value=f"{vps['cpu']} cores", inline=True)
                 embed.add_field(name="Disk", value=f"{vps['disk']}GB", inline=True)
@@ -2456,11 +2461,11 @@ class OSSelectionView(ui.View):
 
         except Exception as e:
             try:
-                await interaction.followup.send(f"❌ Error reinstalling VPS: {str(e)}", ephemeral=True)
+                await interaction.followup.send(f"âŒ Error reinstalling VPS: {str(e)}", ephemeral=True)
             except:
                 try:
                     channel = interaction.channel
-                    await channel.send(f"❌ Error reinstalling Power ⚡ Host ☁️ VPS {self.vps_id}: {str(e)}")
+                    await channel.send(f"âŒ Error reinstalling Power âš¡ Host â˜ï¸ VPS {self.vps_id}: {str(e)}")
                 except:
                     logger.error(f"Failed to send error message: {e}")
 
@@ -2495,13 +2500,13 @@ class TransferVPSModal(ui.Modal, title='Transfer VPS'):
             else:
                 # Validate it's a numeric ID
                 if not new_owner_input.isdigit():
-                    await interaction.response.send_message("❌ Please provide a valid user ID or @mention", ephemeral=True)
+                    await interaction.response.send_message("âŒ Please provide a valid user ID or @mention", ephemeral=True)
                     return
                 new_owner_id = new_owner_input
 
             token, vps = bot.db.get_vps_by_id(self.vps_id)
             if not vps or vps["created_by"] != str(interaction.user.id):
-                await interaction.response.send_message("❌ VPS not found or you don't have permission to transfer it!", ephemeral=True)
+                await interaction.response.send_message("âŒ VPS not found or you don't have permission to transfer it!", ephemeral=True)
                 return
 
             try:
@@ -2516,23 +2521,23 @@ class TransferVPSModal(ui.Modal, title='Transfer VPS'):
                 
                 # Check if new owner is banned
                 if bot.db.is_user_banned(new_owner.id):
-                    await interaction.response.send_message(f"❌ {new_owner.mention} is banned!", ephemeral=True)
+                    await interaction.response.send_message(f"âŒ {new_owner.mention} is banned!", ephemeral=True)
                     return
 
                 # Check if new owner already has max VPS
                 if bot.db.get_user_vps_count(new_owner.id) >= bot.db.get_setting('max_vps_per_user'):
-                    await interaction.response.send_message(f"❌ {new_owner.mention} already has the maximum number of VPS instances ({bot.db.get_setting('max_vps_per_user')})", ephemeral=True)
+                    await interaction.response.send_message(f"âŒ {new_owner.mention} already has the maximum number of VPS instances ({bot.db.get_setting('max_vps_per_user')})", ephemeral=True)
                     return
             except:
-                await interaction.response.send_message("❌ Invalid user ID or mention!", ephemeral=True)
+                await interaction.response.send_message("âŒ Invalid user ID or mention!", ephemeral=True)
                 return
 
             bot.db.update_vps(token, {"created_by": str(new_owner.id)})
 
-            await interaction.response.send_message(f"✅ Power ⚡ Host ☁️ VPS {self.vps_id} has been transferred from {old_owner_name} to {new_owner_name}!", ephemeral=True)
+            await interaction.response.send_message(f"âœ… Power âš¡ Host â˜ï¸ VPS {self.vps_id} has been transferred from {old_owner_name} to {new_owner_name}!", ephemeral=True)
             
             try:
-                embed = discord.Embed(title="Power ⚡ Host ☁️ VPS Transferred to You", color=discord.Color.green())
+                embed = discord.Embed(title="Power âš¡ Host â˜ï¸ VPS Transferred to You", color=discord.Color.green())
                 embed.add_field(name="VPS ID", value=self.vps_id, inline=True)
                 embed.add_field(name="Previous Owner", value=old_owner_name, inline=True)
                 embed.add_field(name="Memory", value=f"{vps['memory']}GB", inline=True)
@@ -2547,7 +2552,7 @@ class TransferVPSModal(ui.Modal, title='Transfer VPS'):
 
         except Exception as e:
             logger.error(f"Error in TransferVPSModal: {e}")
-            await interaction.response.send_message(f"❌ Error transferring VPS: {str(e)}", ephemeral=True)
+            await interaction.response.send_message(f"âŒ Error transferring VPS: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='manage_vps', description='Manage a VPS instance')
 @app_commands.describe(
@@ -2558,7 +2563,7 @@ async def manage_vps(ctx, vps_id: str):
     try:
         token, vps = bot.db.get_vps_by_id(vps_id)
         if not vps or (vps["created_by"] != str(ctx.author.id) and not has_admin_role(ctx)):
-            await ctx.send("❌ VPS not found or you don't have access to it!", ephemeral=True)
+            await ctx.send("âŒ VPS not found or you don't have access to it!", ephemeral=True)
             return
 
         try:
@@ -2569,7 +2574,7 @@ async def manage_vps(ctx, vps_id: str):
 
         status = vps['status'].capitalize()
 
-        embed = discord.Embed(title=f"Power ⚡ Host ☁️ VPS Management - {vps_id}", color=discord.Color.blue())
+        embed = discord.Embed(title=f"Power âš¡ Host â˜ï¸ VPS Management - {vps_id}", color=discord.Color.blue())
         embed.add_field(name="Status", value=f"{status} (Container: {container_status})", inline=True)
         embed.add_field(name="Memory", value=f"{vps['memory']}GB", inline=True)
         embed.add_field(name="CPU", value=f"{vps['cpu']} cores", inline=True)
@@ -2585,7 +2590,7 @@ async def manage_vps(ctx, vps_id: str):
         view.original_message = message
     except Exception as e:
         logger.error(f"Error in manage_vps: {e}")
-        await ctx.send(f"❌ Error managing VPS: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error managing VPS: {str(e)}", ephemeral=True)
 
 @bot.hybrid_command(name='transfer_vps', description='Transfer a VPS to another user')
 @app_commands.describe(
@@ -2597,24 +2602,24 @@ async def transfer_vps_command(ctx, vps_id: str, new_owner: discord.Member):
     try:
         token, vps = bot.db.get_vps_by_id(vps_id)
         if not vps or vps["created_by"] != str(ctx.author.id):
-            await ctx.send("❌ VPS not found or you don't have permission to transfer it!", ephemeral=True)
+            await ctx.send("âŒ VPS not found or you don't have permission to transfer it!", ephemeral=True)
             return
 
         if bot.db.is_user_banned(new_owner.id):
-            await ctx.send("❌ This user is banned!", ephemeral=True)
+            await ctx.send("âŒ This user is banned!", ephemeral=True)
             return
 
         # Check if new owner already has max VPS
         if bot.db.get_user_vps_count(new_owner.id) >= bot.db.get_setting('max_vps_per_user'):
-            await ctx.send(f"❌ {new_owner.mention} already has the maximum number of VPS instances ({bot.db.get_setting('max_vps_per_user')})", ephemeral=True)
+            await ctx.send(f"âŒ {new_owner.mention} already has the maximum number of VPS instances ({bot.db.get_setting('max_vps_per_user')})", ephemeral=True)
             return
 
         bot.db.update_vps(token, {"created_by": str(new_owner.id)})
 
-        await ctx.send(f"✅ Power ⚡ Host ☁️ VPS {vps_id} has been transferred from {ctx.author.name} to {new_owner.name}!")
+        await ctx.send(f"âœ… Power âš¡ Host â˜ï¸ VPS {vps_id} has been transferred from {ctx.author.name} to {new_owner.name}!")
 
         try:
-            embed = discord.Embed(title="Power ⚡ Host ☁️ VPS Transferred to You", color=discord.Color.green())
+            embed = discord.Embed(title="Power âš¡ Host â˜ï¸ VPS Transferred to You", color=discord.Color.green())
             embed.add_field(name="VPS ID", value=vps_id, inline=True)
             embed.add_field(name="Previous Owner", value=ctx.author.name, inline=True)
             embed.add_field(name="Memory", value=f"{vps['memory']}GB", inline=True)
@@ -2629,19 +2634,19 @@ async def transfer_vps_command(ctx, vps_id: str, new_owner: discord.Member):
 
     except Exception as e:
         logger.error(f"Error in transfer_vps_command: {e}")
-        await ctx.send(f"❌ Error transferring VPS: {str(e)}", ephemeral=True)
+        await ctx.send(f"âŒ Error transferring VPS: {str(e)}", ephemeral=True)
 
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
-        await ctx.send("❌ You don't have permission to use this command!", ephemeral=True)
+        await ctx.send("âŒ You don't have permission to use this command!", ephemeral=True)
     elif isinstance(error, commands.CommandNotFound):
-        await ctx.send("❌ Command not found! Use `/help` to see available commands.", ephemeral=True)
+        await ctx.send("âŒ Command not found! Use `/help` to see available commands.", ephemeral=True)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(f"❌ Missing required argument: {error.param.name}", ephemeral=True)
+        await ctx.send(f"âŒ Missing required argument: {error.param.name}", ephemeral=True)
     else:
         logger.error(f"Command error: {error}")
-        await ctx.send(f"❌ An error occurred: {str(error)}", ephemeral=True)
+        await ctx.send(f"âŒ An error occurred: {str(error)}", ephemeral=True)
 
 # Run the bot
 if __name__ == "__main__":
